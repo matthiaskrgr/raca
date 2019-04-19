@@ -27,6 +27,22 @@ fn main() {
 
     let mut results = Vec::new();
 
+    stdout.lines().for_each(|line| {
+        if line.starts_with("error: internal compiler error:")
+            || line.starts_with("query stack during panic:")
+        {
+            results.push(format!("ERROR:   {}", line));
+
+        }
+    });
+    stderr.lines().for_each(|line| {
+        if line.starts_with("error: internal compiler error:")
+            || line.starts_with("query stack during panic:")
+        {
+            results.push(format!("ERROR:   {}", line));
+        }
+    });
+
     stdout
         .lines()
         .map(|raw_line| serde_json::from_str(raw_line).unwrap())
@@ -74,21 +90,10 @@ fn main() {
             results.push(msg);
         });
 
+
     results.sort();
     results.dedup();
 
     results.iter().for_each(|x| println!("{}", x));
 
-    //println!("err: {}", stderr);
-    //println!("out: {}", stdout);
-
-    if stderr.starts_with("error: internal compiler error:")
-        || stderr.starts_with("query stack during panic:")
-        || stdout.starts_with("error: internal compiler error:")
-        || stdout.starts_with("query stack during panic:")
-    {
-        println!(" ERROR: something crashed");
-    } else {
-        // println!(" ok");
-    }
 }
