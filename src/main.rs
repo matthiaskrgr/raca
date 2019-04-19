@@ -4,8 +4,8 @@ fn main() {
         //    let clippy = std::process::Command::new(
         //        "/home/matthias/vcs/github/rust-clippy/target/debug/cargo-clippy",
         //    )
-        // .arg("--all-targets")
-        //.arg("--all-features")
+        .arg("--all-targets")
+        .arg("--all-features")
         .arg("--message-format=json")
         .args(&[
             "--",
@@ -25,6 +25,8 @@ fn main() {
     let stderr = String::from_utf8_lossy(&clippy.stderr).to_string();
     let stdout = String::from_utf8_lossy(&clippy.stdout).to_string(); // json
 
+    let mut results = Vec::new();
+
     stdout
         .lines()
         .map(|raw_line| serde_json::from_str(raw_line).unwrap())
@@ -36,13 +38,29 @@ fn main() {
             let pkg = pid.split_whitespace().nth(0).unwrap();
             let version = pid.split_whitespace().nth(1).unwrap();
 
-            let src = &json["message"]["spans"][0]["file_name"];
+            // HACK
+            let srcs: Vec<serde_json::Value> =
+                serde_json::from_str(&json["message"]["spans"].to_string()).unwrap();
+
+            let mut code_locs = String::new();
+            for i in &srcs {
+                let name = &i["file_name"];
+                let ls = &i["line_start"];
+                let le = &i["line_end"];
+                code_locs.push_str(&format!("{}, {} -> {}", name, ls, le));
+            }
 
             let id = &json["message"]["code"]["code"];
 
-            let msg = format!("{} {} {} {}", pkg, version, id, src);
-            println!("{}", msg);
+            let msg = format!("{} {} {} {}", pkg, version, id, code_locs);
+            //println!("{}", msg);
+            results.push(msg);
         });
+
+    results.sort();
+    results.dedup();
+
+    results.iter().for_each(|x| println!("{}", x));
 
     //println!("err: {}", stderr);
     //println!("out: {}", stdout);
