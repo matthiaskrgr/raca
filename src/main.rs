@@ -35,7 +35,12 @@ fn main() {
         .for_each(|json| {
             let pid = &json["package_id"].to_string();
 
-            let pkg = pid.split_whitespace().nth(0).unwrap();
+            let pkg = pid
+                .split_whitespace()
+                .nth(0)
+                .unwrap()
+                .trim_matches('\"')
+                .to_string();
             let version = pid.split_whitespace().nth(1).unwrap();
 
             // HACK
@@ -44,15 +49,27 @@ fn main() {
 
             let mut code_locs = String::new();
             for i in &srcs {
-                let name = &i["file_name"];
-                let ls = &i["line_start"];
-                let le = &i["line_end"];
-                code_locs.push_str(&format!("{}, {} -> {}", name, ls, le));
+                let name = i["file_name"].to_string().trim_matches('\"').to_string();
+                let lstart = &i["line_start"];
+                let lend = &i["line_end"];
+                let cstart = &i["column_start"];
+                let cend = &i["column_start"];
+                if lstart == lend && cstart == cend {
+                    code_locs.push_str(&format!("{}:{}:{}", name, lstart, cstart));
+                } else {
+                    code_locs.push_str(&format!(
+                        "{}:{}:{} -> {}:{}:{}",
+                        name, lstart, cstart, name, lend, cend
+                    ));
+                }
             }
 
-            let id = &json["message"]["code"]["code"];
+            let id = &json["message"]["code"]["code"]
+                .to_string()
+                .trim_matches('\"')
+                .to_string();
 
-            let msg = format!("{} {} {} {}", pkg, version, id, code_locs);
+            let msg = format!("{} {} {} {}", pkg, version, code_locs, id);
             //println!("{}", msg);
             results.push(msg);
         });
