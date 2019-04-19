@@ -89,6 +89,6 @@ fn main() {
     {
         println!(" ERROR: something crashed");
     } else {
-        println!(" ok");
+        // println!(" ok");
     }
 }
