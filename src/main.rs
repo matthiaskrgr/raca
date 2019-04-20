@@ -96,4 +96,23 @@ fn main() {
 
     results.iter().for_each(|x| println!("{}", x));
 
+    let mut ids = Vec::new();
+    results
+        .iter()
+        .for_each(|line| ids.push(line.split(' ').last().unwrap()));
+
+    let mut summary: Vec<(usize, &&str)> = ids
+        .iter()
+        .map(|id_outer| (ids.iter().filter(|id| id == &id_outer).count(), id_outer))
+        .collect::<Vec<_>>();
+
+    summary.sort();
+    summary.dedup();
+
+    println!("\n\nSummary\n");
+
+    for i in summary {
+        let (numb, id) = i;
+        println!("{}, {}", numb, id);
+    }
 }
