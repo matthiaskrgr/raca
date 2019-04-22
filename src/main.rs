@@ -32,7 +32,6 @@ fn main() {
             || line.starts_with("query stack during panic:")
         {
             results.push(format!("ERROR:   {}", line));
-
         }
     });
     stderr.lines().for_each(|line| {
@@ -89,7 +88,6 @@ fn main() {
             //println!("{}", msg);
             results.push(msg);
         });
-
 
     results.sort();
     results.dedup();
