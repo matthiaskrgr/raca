@@ -132,7 +132,7 @@ impl Crat {
     }
 }
 
-fn get_crate(krate: Crat) {
+fn download_crate(krate: Crat) {
     println!("Downloading {}-{} ...", krate.name, krate.version);
     let mut url: String = String::from("https://crates.io/api/v1/crates/");
     url.push_str(krate.name);
@@ -150,6 +150,10 @@ fn get_crate(krate: Crat) {
     std::io::copy(&mut req, &mut dest_file).unwrap();
 }
 
+fn extract_crate(path: PathBuf) {
+    let krate = std::fs::File::open(path);
+}
+
 fn main() {
     let cargo = Crat::new("cargo", "0.35.0");
     let cargo_old = Crat::new("cargo", "0.34.0");
@@ -160,8 +164,8 @@ fn main() {
         std::fs::create_dir(download_dir).unwrap();
     }
 
-    get_crate(cargo);
-    get_crate(cargo_old);
+    download_crate(cargo);
+    download_crate(cargo_old);
 }
 
 /*
