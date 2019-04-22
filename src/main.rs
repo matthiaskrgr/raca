@@ -4,9 +4,7 @@ fn run_clippy(path: PathBuf) {
     println!("Checking {} ...", path.display());
     let clippy = std::process::Command::new("cargo")
         .arg("clippy")
-        //    let clippy = std::process::Command::new(
-        //        "/home/matthias/vcs/github/rust-clippy/target/debug/cargo-clippy",
-        //    )
+
         .arg("--all-targets")
         .arg("--all-features")
         .arg("--message-format=json")
@@ -20,12 +18,10 @@ fn run_clippy(path: PathBuf) {
         ])
         .env("CARGO_INCREMENTAL", "0")
         .env("RUST_BACKTRACE", "full")
-        //            .env("CARGO_TARGET_DIR", &target_dir)
         .current_dir(path)
         .output()
         .unwrap();
-    //println!("crate_dir: {}, cargo_target_dir {}",Crate_dir, target_dir.display());
-    //println!("output: {:?}", CLIPPY);
+
     let stderr = String::from_utf8_lossy(&clippy.stderr).to_string();
     let stdout = String::from_utf8_lossy(&clippy.stdout).to_string(); // json
 
@@ -190,10 +186,9 @@ fn main() {
         extract_crate(dest_file, archives_dir.clone());
     }
 
+    // start checking crates via clippy
     for k in std::fs::read_dir(archives_dir.clone()).unwrap() {
         run_clippy(k.unwrap().path());
     }
-
-    // start checking
 
 }
