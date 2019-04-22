@@ -241,11 +241,18 @@ fn process_logs(check_results: Vec<CheckResult>, kratename: String) {
 
 fn main() {
     let krates = vec![
-        /*    Crat::new("cargo", "0.35.0"),
-            Crat::new("cargo", "0.34.0"),
-            Crat::new("cargo", "0.33.0"),
-        */
-        Crat::new("lazy_static", "1.3.0"),
+        Crat::new("cargo", "0.35.0"),
+        Crat::new("crossbeam-utils", "0.6.5"),
+        Crat::new("mdbook", "0.2.3"),
+        Crat::new("parking_log", "0.7.1"),
+        Crat::new("quote", "0.6.12"),
+        Crat::new("ryu", "0.2.7"),
+        Crat::new("serde", "1.0.90"),
+        Crat::new("syn", "0.15.32"),
+        Crat::new("thread_local", "0.3.6"),
+        Crat::new("tokei", "9.1.1"),
+        Crat::new("unicode-normalization", "0.1.8"),
+        Crat::new("winapi", "0.3.7"),
     ];
 
     // create a download dir
