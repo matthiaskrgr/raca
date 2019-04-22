@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
-fn run_clippy() {
+fn run_clippy(path: PathBuf) {
+    println!("Checking {} ...", path.display());
     let clippy = std::process::Command::new("cargo")
         .arg("clippy")
         //    let clippy = std::process::Command::new(
@@ -20,6 +21,7 @@ fn run_clippy() {
         .env("CARGO_INCREMENTAL", "0")
         .env("RUST_BACKTRACE", "full")
         //            .env("CARGO_TARGET_DIR", &target_dir)
+        .current_dir(path)
         .output()
         .unwrap();
     //println!("crate_dir: {}, cargo_target_dir {}",Crate_dir, target_dir.display());
@@ -182,9 +184,16 @@ fn main() {
         std::fs::create_dir(&archives_dir).unwrap();
     }
 
+    // download and extract all crates
     for k in krates {
         let dest_file = download_crate(k);
-
         extract_crate(dest_file, archives_dir.clone());
     }
+
+    for k in std::fs::read_dir(archives_dir.clone()).unwrap() {
+        run_clippy(k.unwrap().path());
+    }
+
+    // start checking
+
 }
