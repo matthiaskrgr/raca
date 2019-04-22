@@ -22,7 +22,7 @@ fn run_clippy() {
         //            .env("CARGO_TARGET_DIR", &target_dir)
         .output()
         .unwrap();
-    //println!("crate_dir: {}, cargo_target_dir {}", crate_dir, target_dir.display());
+    //println!("crate_dir: {}, cargo_target_dir {}",Crate_dir, target_dir.display());
     //println!("output: {:?}", CLIPPY);
     let stderr = String::from_utf8_lossy(&clippy.stderr).to_string();
     let stdout = String::from_utf8_lossy(&clippy.stdout).to_string(); // json
@@ -118,12 +118,12 @@ fn run_clippy() {
 }
 
 #[derive(Debug, Clone)]
-struct crat {
+struct Crat {
     name: &'static str,
     version: semver::Version,
 }
 
-impl crat {
+impl Crat {
     fn new(name: &'static str, version: &'static str) -> Self {
         Self {
             name,
@@ -132,7 +132,8 @@ impl crat {
     }
 }
 
-fn get_crate(krate: crat) {
+fn get_crate(krate: Crat) {
+    println!("Downloading {}-{} ...", krate.name, krate.version);
     let mut url: String = String::from("https://crates.io/api/v1/crates/");
     url.push_str(krate.name);
     url.push_str("/");
@@ -141,19 +142,17 @@ fn get_crate(krate: crat) {
     url.push_str("download");
 
     let mut req =
-        reqwest::get(url.as_str()).expect(&format!("Failed to download crate {:?}", krate));
-
+        reqwest::get(url.as_str()).expect(&format!("Failed to downloadCrate {:?}", krate));
     let filename = format!("{}-{}.zip", krate.name, krate.version.to_string());
-
     let dest_path = PathBuf::from("downloads/").join(filename);
-
     let mut dest_file = std::fs::File::create(&dest_path).unwrap();
 
     std::io::copy(&mut req, &mut dest_file).unwrap();
 }
 
 fn main() {
-    let cargo = crat::new("cargo", "0.35.0");
+    let cargo = Crat::new("cargo", "0.35.0");
+    let cargo_old = Crat::new("cargo", "0.34.0");
 
     // create a download dir
     let download_dir = PathBuf::from("downloads");
@@ -162,6 +161,7 @@ fn main() {
     }
 
     get_crate(cargo);
+    get_crate(cargo_old);
 }
 
 /*
