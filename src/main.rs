@@ -100,7 +100,7 @@ fn run_clippy(path: PathBuf) {
                 .to_string();
 
             let chkrslt = CheckResult {
-                krate: pid.to_string(),
+                krate: pkg.to_string(),
                 version: version.to_string(),
                 id: id.to_string(),
                 src_locs: code_locs,
