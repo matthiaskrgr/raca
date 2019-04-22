@@ -1,7 +1,8 @@
+use std::io::Write;
 use std::path::PathBuf;
 
-fn run_clippy(path: PathBuf) {
-    println!("Checking {} ...", path.display());
+fn run_clippy(path: PathBuf) -> Vec<CheckResult> {
+    println!("Checking {} ...", &path.display());
     let clippy = std::process::Command::new("cargo")
         .arg("clippy")
         .arg("--all-targets")
@@ -17,7 +18,7 @@ fn run_clippy(path: PathBuf) {
         ])
         .env("CARGO_INCREMENTAL", "0")
         .env("RUST_BACKTRACE", "full")
-        .current_dir(path)
+        .current_dir(&path)
         .output()
         .unwrap();
 
@@ -112,9 +113,9 @@ fn run_clippy(path: PathBuf) {
     results.sort_by_key(|chrs| format!("{:?}", chrs));
     results.dedup_by_key(|chrs| format!("{:?}", chrs));
 
-    results
-        .iter()
-        .for_each(|result| println!("{}", result.pretty()));
+    //    results
+    //    .iter()
+    //     .for_each(|result| println!("{}", result.pretty()));
 
     let mut ids = Vec::new();
     results
@@ -129,12 +130,13 @@ fn run_clippy(path: PathBuf) {
     summary.sort();
     summary.dedup();
 
-    println!("\n\nSummary\n");
+    println!("\nSummary: {}", &path.display());
 
     for i in summary {
         let (numb, id) = i;
         println!("{}, {}", numb, id);
     }
+    results
 }
 
 #[derive(Debug, Clone)]
@@ -192,7 +194,6 @@ impl SrcLoc {
     }
 }
 
-
 fn download_crate(krate: Crat) -> PathBuf {
     println!("Downloading {}-{} ...", krate.name, krate.version);
     let mut url: String = String::from("https://crates.io/api/v1/crates/");
@@ -224,7 +225,19 @@ fn extract_crate(src_path: PathBuf, target_path: PathBuf) {
     archiv.unpack(target_path).unwrap();
 }
 
-fn process_logs(check_results: Vec<String>) {}
+fn process_logs(check_results: Vec<CheckResult>, kratename: String) {
+    let log_dir = PathBuf::from("logs");
+
+    let filename = log_dir.join(kratename);
+    let mut output = std::fs::File::create(filename).unwrap();
+
+    check_results.iter().for_each(|line| {
+        let mut line_with_lf = line.pretty();
+        line_with_lf.push_str("\n");
+
+        output.write_all(line_with_lf.as_bytes()).unwrap()
+    });
+}
 
 fn main() {
     let krates = vec![
@@ -232,7 +245,7 @@ fn main() {
             Crat::new("cargo", "0.34.0"),
             Crat::new("cargo", "0.33.0"),
         */
-        Crat::new("walkdir", "2.2.7"),
+        Crat::new("lazy_static", "1.3.0"),
     ];
 
     // create a download dir
@@ -247,6 +260,11 @@ fn main() {
         std::fs::create_dir(&archives_dir).unwrap();
     }
 
+    let log_dir = PathBuf::from("logs");
+    if !log_dir.is_dir() {
+        std::fs::create_dir(&log_dir).unwrap();
+    }
+
     // download and extract all crates
     for k in krates {
         let dest_file = download_crate(k);
@@ -255,11 +273,8 @@ fn main() {
 
     // start checking crates via clippy nad process the logs
     for k in std::fs::read_dir(archives_dir.clone()).unwrap() {
-        run_clippy(k.unwrap().path());
-    }
-
-    let log_dir = PathBuf::from("logs");
-    if !log_dir.is_dir() {
-        std::fs::create_dir(&log_dir).unwrap();
+        let results = run_clippy(k.unwrap().path());
+        let kratename = format!("{}-{}", results[0].krate, results[0].version);
+        process_logs(results, kratename);
     }
 }
