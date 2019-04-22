@@ -5,4 +5,6 @@ authors = ["Matthias Krüger <matthias.krueger@famsik.de>"]
 edition = "2018"
 
 [dependencies]
-serde_json = "1.0"
+serde_json = "1.0" # parse cargo clippy output
+semver = "0.9" # gen Version struct for cargo-download
+cargo-download = "0.1" # download crate to check
