@@ -26,6 +26,7 @@ fn run_clippy(path: PathBuf) {
 
     let mut results = Vec::new();
 
+    /*
     stdout.lines().for_each(|line| {
         if line.starts_with("error: internal compiler error:")
             || line.starts_with("query stack during panic:")
@@ -40,6 +41,7 @@ fn run_clippy(path: PathBuf) {
             results.push(format!("ERROR:   {}", line));
         }
     });
+    */
 
     stdout
         .lines()
@@ -61,7 +63,7 @@ fn run_clippy(path: PathBuf) {
             let srcs: Vec<serde_json::Value> =
                 serde_json::from_str(&json["message"]["spans"].to_string()).unwrap();
 
-            let mut code_locs = String::new();
+            let mut code_locs = Vec::new();
             for i in &srcs {
                 let name = i["file_name"].to_string().trim_matches('\"').to_string();
                 let lstart = &i["line_start"];
@@ -69,12 +71,26 @@ fn run_clippy(path: PathBuf) {
                 let cstart = &i["column_start"];
                 let cend = &i["column_start"];
                 if lstart == lend && cstart == cend {
-                    code_locs.push_str(&format!("{}:{}:{}", name, lstart, cstart));
+                    let loc1 = SrcLoc {
+                        file: name,
+                        line: lstart.to_string().parse::<u32>().unwrap(),
+                        column: cstart.to_string().parse::<u32>().unwrap(),
+                    };
+                    code_locs.push(loc1);
                 } else {
-                    code_locs.push_str(&format!(
-                        "{}:{}:{} -> {}:{}:{}",
-                        name, lstart, cstart, name, lend, cend
-                    ));
+                    let loc1 = SrcLoc {
+                        file: name.clone(),
+                        line: lstart.to_string().parse::<u32>().unwrap(),
+                        column: cstart.to_string().parse::<u32>().unwrap(),
+                    };
+
+                    let loc2 = SrcLoc {
+                        file: name,
+                        line: lend.to_string().parse::<u32>().unwrap(),
+                        column: cend.to_string().parse::<u32>().unwrap(),
+                    };
+                    code_locs.push(loc1);
+                    code_locs.push(loc2);
                 }
             }
 
@@ -83,22 +99,28 @@ fn run_clippy(path: PathBuf) {
                 .trim_matches('\"')
                 .to_string();
 
-            let msg = format!("{} {} {} {}", pkg, version, id, code_locs);
+            let chkrslt = CheckResult {
+                krate: pid.to_string(),
+                version: version.to_string(),
+                id: id.to_string(),
+                src_locs: code_locs,
+            };
+            //let msg = format!("{} {} {} {}", pkg, version, id, code_locs);
             //println!("{}", msg);
-            results.push(msg);
+            results.push(chkrslt);
         });
 
-    results.sort();
-    results.dedup();
+    results.sort_by_key(|chrs| format!("{:?}", chrs));
+    results.dedup_by_key(|chrs| format!("{:?}", chrs));
 
-    results.iter().for_each(|x| println!("{}", x));
+    results.iter().for_each(|x| println!("{:?}", x));
 
     let mut ids = Vec::new();
     results
         .iter()
-        .for_each(|line| ids.push(line.split(' ').last().unwrap()));
+        .for_each(|result| ids.push(result.id.clone()));
 
-    let mut summary: Vec<(usize, &&str)> = ids
+    let mut summary: Vec<(usize, &String)> = ids
         .iter()
         .map(|id_outer| (ids.iter().filter(|id| id == &id_outer).count(), id_outer))
         .collect::<Vec<_>>();
@@ -132,7 +154,7 @@ impl Crat {
 #[derive(Debug, Clone)]
 struct CheckResult {
     krate: String,
-    version: semver::Version,
+    version: String,
     id: String,
     src_locs: Vec<SrcLoc>, // source code locations
 }
