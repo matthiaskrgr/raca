@@ -188,27 +188,3 @@ fn main() {
         extract_crate(dest_file, archives_dir.clone());
     }
 }
-
-/*
-let refresh_rate = std::time::Duration::from_secs(10);
-
-println!("getting: {}", url);
-
-let mut content_old = String::new();
-
-loop {
-    let mut req = reqwest::get(url).expect("Could not get url");
-    let content = req.text().unwrap();
-
-    let line_diff = content.lines().count() - content_old.lines().count();
-    let old_lines = content.lines().count() - line_diff;
-    // only print new lines (skip number of previous lines)
-    content
-        .lines()
-        .skip(old_lines)
-        .for_each(|line| println!("{}", line));
-
-    std::thread::sleep(refresh_rate);
-    content_old = content;
-}
-*/
