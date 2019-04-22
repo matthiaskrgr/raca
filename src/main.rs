@@ -1,4 +1,6 @@
-fn main() {
+use std::path::PathBuf;
+
+fn run_clippy() {
     let clippy = std::process::Command::new("cargo")
         .arg("clippy")
         //    let clippy = std::process::Command::new(
@@ -114,3 +116,74 @@ fn main() {
         println!("{}, {}", numb, id);
     }
 }
+
+#[derive(Debug, Clone)]
+struct crat {
+    name: &'static str,
+    version: semver::Version,
+}
+
+impl crat {
+    fn new(name: &'static str, version: &'static str) -> Self {
+        Self {
+            name,
+            version: semver::Version::parse(version).unwrap(),
+        }
+    }
+}
+
+fn get_crate(krate: crat) {
+    let mut url: String = String::from("https://crates.io/api/v1/crates/");
+    url.push_str(krate.name);
+    url.push_str("/");
+    url.push_str(&krate.version.to_string());
+    url.push_str("/");
+    url.push_str("download");
+
+    let mut req =
+        reqwest::get(url.as_str()).expect(&format!("Failed to download crate {:?}", krate));
+
+    let filename = format!("{}-{}.zip", krate.name, krate.version.to_string());
+
+    let dest_path = PathBuf::from("downloads/").join(filename);
+
+    let mut dest_file = std::fs::File::create(&dest_path).unwrap();
+
+    std::io::copy(&mut req, &mut dest_file).unwrap();
+}
+
+fn main() {
+    let cargo = crat::new("cargo", "0.35.0");
+
+    // create a download dir
+    let download_dir = PathBuf::from("downloads");
+    if !download_dir.is_dir() {
+        std::fs::create_dir(download_dir).unwrap();
+    }
+
+    get_crate(cargo);
+}
+
+/*
+let refresh_rate = std::time::Duration::from_secs(10);
+
+println!("getting: {}", url);
+
+let mut content_old = String::new();
+
+loop {
+    let mut req = reqwest::get(url).expect("Could not get url");
+    let content = req.text().unwrap();
+
+    let line_diff = content.lines().count() - content_old.lines().count();
+    let old_lines = content.lines().count() - line_diff;
+    // only print new lines (skip number of previous lines)
+    content
+        .lines()
+        .skip(old_lines)
+        .for_each(|line| println!("{}", line));
+
+    std::thread::sleep(refresh_rate);
+    content_old = content;
+}
+*/

@@ -11,5 +11,5 @@ serde_json = "1.0"
 # gen Version struct for cargo-download
 semver = "0.9"
 
-# download crate to check
-cargo-download = "0.1.2"
+# download stuff
+reqwest = "0.9"
