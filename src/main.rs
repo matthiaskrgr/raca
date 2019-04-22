@@ -140,7 +140,7 @@ fn download_crate(krate: Crat) -> PathBuf {
     url.push_str("download");
 
     let mut req =
-        reqwest::get(url.as_str()).expect(&format!("Failed to downloadCrate {:?}", krate));
+        reqwest::get(url.as_str()).unwrap_or_else(|_| panic!("Failed to downloadCrate {:?}", krate));
     let filename = format!("{}-{}.crate", krate.name, krate.version.to_string());
     let dest_path = PathBuf::from("downloads/").join(filename);
     let mut dest_file = std::fs::File::create(&dest_path).unwrap();
