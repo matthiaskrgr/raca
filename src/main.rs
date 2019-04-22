@@ -132,7 +132,7 @@ impl Crat {
     }
 }
 
-fn download_crate(krate: Crat) {
+fn download_crate(krate: Crat) -> PathBuf {
     println!("Downloading {}-{} ...", krate.name, krate.version);
     let mut url: String = String::from("https://crates.io/api/v1/crates/");
     url.push_str(krate.name);
@@ -148,15 +148,27 @@ fn download_crate(krate: Crat) {
     let mut dest_file = std::fs::File::create(&dest_path).unwrap();
 
     std::io::copy(&mut req, &mut dest_file).unwrap();
+    dest_path
 }
 
-fn extract_crate(path: PathBuf) {
-    let krate = std::fs::File::open(path);
+fn extract_crate(src_path: PathBuf, target_path: PathBuf) {
+    println!(
+        "Extracting {} into {}",
+        src_path.display(),
+        target_path.display()
+    );
+    let krate = std::fs::File::open(src_path).unwrap();
+    let tar = flate2::read::GzDecoder::new(krate);
+    let mut archiv = tar::Archive::new(tar);
+    archiv.unpack(target_path).unwrap();
 }
 
 fn main() {
-    let cargo = Crat::new("cargo", "0.35.0");
-    let cargo_old = Crat::new("cargo", "0.34.0");
+    let krates = vec![
+        Crat::new("cargo", "0.35.0"),
+        Crat::new("cargo", "0.34.0"),
+        Crat::new("cargo", "0.33.0"),
+    ];
 
     // create a download dir
     let download_dir = PathBuf::from("downloads");
@@ -164,8 +176,17 @@ fn main() {
         std::fs::create_dir(download_dir).unwrap();
     }
 
-    download_crate(cargo);
-    download_crate(cargo_old);
+    // create a archiv dir
+    let archives_dir = PathBuf::from("archives");
+    if !archives_dir.is_dir() {
+        std::fs::create_dir(&archives_dir).unwrap();
+    }
+
+    for k in krates {
+        let dest_file = download_crate(k);
+
+        extract_crate(dest_file, archives_dir.clone());
+    }
 }
 
 /*
