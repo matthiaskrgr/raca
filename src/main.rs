@@ -105,15 +105,16 @@ fn run_clippy(path: PathBuf) {
                 id: id.to_string(),
                 src_locs: code_locs,
             };
-            //let msg = format!("{} {} {} {}", pkg, version, id, code_locs);
-            //println!("{}", msg);
+
             results.push(chkrslt);
         });
 
     results.sort_by_key(|chrs| format!("{:?}", chrs));
     results.dedup_by_key(|chrs| format!("{:?}", chrs));
 
-    results.iter().for_each(|x| println!("{:?}", x));
+    results
+        .iter()
+        .for_each(|result| println!("{}", result.pretty()));
 
     let mut ids = Vec::new();
     results
@@ -159,6 +160,24 @@ struct CheckResult {
     src_locs: Vec<SrcLoc>, // source code locations
 }
 
+impl CheckResult {
+    fn pretty(&self) -> String {
+        let locstr = {
+            if self.src_locs.len() == 2 {
+                format!(
+                    "{}->{}",
+                    self.src_locs[0].pretty(),
+                    self.src_locs[1].pretty()
+                )
+            } else {
+                // 1
+                self.src_locs[0].pretty()
+            }
+        };
+        format!("{}-{} {} {}", self.krate, self.version, self.id, locstr)
+    }
+}
+
 #[derive(Debug, Clone)]
 struct SrcLoc {
     // source code location
@@ -166,6 +185,13 @@ struct SrcLoc {
     line: u32,
     column: u32,
 }
+
+impl SrcLoc {
+    fn pretty(&self) -> String {
+        format!("{}:{}:{}", self.file, self.line, self.column)
+    }
+}
+
 
 fn download_crate(krate: Crat) -> PathBuf {
     println!("Downloading {}-{} ...", krate.name, krate.version);
