@@ -4,7 +4,6 @@ fn run_clippy(path: PathBuf) {
     println!("Checking {} ...", path.display());
     let clippy = std::process::Command::new("cargo")
         .arg("clippy")
-
         .arg("--all-targets")
         .arg("--all-features")
         .arg("--message-format=json")
@@ -84,7 +83,7 @@ fn run_clippy(path: PathBuf) {
                 .trim_matches('\"')
                 .to_string();
 
-            let msg = format!("{} {} {} {}", pkg, version, code_locs, id);
+            let msg = format!("{} {} {} {}", pkg, version, id, code_locs);
             //println!("{}", msg);
             results.push(msg);
         });
@@ -130,6 +129,22 @@ impl Crat {
     }
 }
 
+#[derive(Debug, Clone)]
+struct CheckResult {
+    krate: String,
+    version: semver::Version,
+    id: String,
+    src_locs: Vec<SrcLoc>, // source code locations
+}
+
+#[derive(Debug, Clone)]
+struct SrcLoc {
+    // source code location
+    file: String,
+    line: u32,
+    column: u32,
+}
+
 fn download_crate(krate: Crat) -> PathBuf {
     println!("Downloading {}-{} ...", krate.name, krate.version);
     let mut url: String = String::from("https://crates.io/api/v1/crates/");
@@ -139,8 +154,8 @@ fn download_crate(krate: Crat) -> PathBuf {
     url.push_str("/");
     url.push_str("download");
 
-    let mut req =
-        reqwest::get(url.as_str()).unwrap_or_else(|_| panic!("Failed to downloadCrate {:?}", krate));
+    let mut req = reqwest::get(url.as_str())
+        .unwrap_or_else(|_| panic!("Failed to downloadCrate {:?}", krate));
     let filename = format!("{}-{}.crate", krate.name, krate.version.to_string());
     let dest_path = PathBuf::from("downloads/").join(filename);
     let mut dest_file = std::fs::File::create(&dest_path).unwrap();
@@ -161,11 +176,15 @@ fn extract_crate(src_path: PathBuf, target_path: PathBuf) {
     archiv.unpack(target_path).unwrap();
 }
 
+fn process_logs(check_results: Vec<String>) {}
+
 fn main() {
     let krates = vec![
-        Crat::new("cargo", "0.35.0"),
-        Crat::new("cargo", "0.34.0"),
-        Crat::new("cargo", "0.33.0"),
+        /*    Crat::new("cargo", "0.35.0"),
+            Crat::new("cargo", "0.34.0"),
+            Crat::new("cargo", "0.33.0"),
+        */
+        Crat::new("walkdir", "2.2.7"),
     ];
 
     // create a download dir
@@ -186,9 +205,13 @@ fn main() {
         extract_crate(dest_file, archives_dir.clone());
     }
 
-    // start checking crates via clippy
+    // start checking crates via clippy nad process the logs
     for k in std::fs::read_dir(archives_dir.clone()).unwrap() {
         run_clippy(k.unwrap().path());
     }
 
+    let log_dir = PathBuf::from("logs");
+    if !log_dir.is_dir() {
+        std::fs::create_dir(&log_dir).unwrap();
+    }
 }
