@@ -194,7 +194,7 @@ impl SrcLoc {
     }
 }
 
-fn download_crate(krate: Crat) -> PathBuf {
+fn download_crate(krate: &Crat) -> PathBuf {
     println!("Downloading {}-{} ...", krate.name, krate.version);
     let mut url: String = String::from("https://crates.io/api/v1/crates/");
     url.push_str(krate.name);
@@ -244,7 +244,7 @@ fn main() {
         Crat::new("cargo", "0.35.0"),
         Crat::new("crossbeam-utils", "0.6.5"),
         Crat::new("mdbook", "0.2.3"),
-        Crat::new("parking_log", "0.7.1"),
+        Crat::new("parking_lot", "0.7.1"),
         Crat::new("quote", "0.6.12"),
         Crat::new("ryu", "0.2.7"),
         Crat::new("serde", "1.0.90"),
@@ -273,15 +273,17 @@ fn main() {
     }
 
     // download and extract all crates
-    for k in krates {
+    for k in &krates {
         let dest_file = download_crate(k);
         extract_crate(dest_file, archives_dir.clone());
     }
 
     // start checking crates via clippy nad process the logs
-    for k in std::fs::read_dir(archives_dir.clone()).unwrap() {
+    for (i, k) in std::fs::read_dir(archives_dir.clone()).unwrap().enumerate() {
+        println!("i {}, k {:?}", i, k);
         let results = run_clippy(k.unwrap().path());
-        let kratename = format!("{}-{}", results[0].krate, results[0].version);
+
+        let kratename = format!("{}-{}", &krates[i].name, &krates[i].version);
         process_logs(results, kratename);
     }
 }
