@@ -280,7 +280,7 @@ fn main() {
 
     // start checking crates via clippy nad process the logs
     for (i, k) in std::fs::read_dir(archives_dir.clone()).unwrap().enumerate() {
-        println!("i {}, k {:?}", i, k);
+        //println!("i {}, k {:?}", i, k);
         let results = run_clippy(k.unwrap().path());
 
         let kratename = format!("{}-{}", &krates[i].name, &krates[i].version);
