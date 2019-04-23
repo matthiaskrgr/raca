@@ -22,7 +22,7 @@ fn run_clippy(path: PathBuf) -> Vec<CheckResult> {
         .output()
         .unwrap();
 
-    let stderr = String::from_utf8_lossy(&clippy.stderr).to_string();
+    let _stderr = String::from_utf8_lossy(&clippy.stderr).to_string();
     let stdout = String::from_utf8_lossy(&clippy.stdout).to_string(); // json
 
     let mut results = Vec::new();
@@ -171,8 +171,7 @@ impl CheckResult {
                     self.src_locs[0].pretty(),
                     self.src_locs[1].pretty()
                 )
-            } else if  self.src_locs.len() == 1 {
-                
+            } else if self.src_locs.len() == 1 {
                 self.src_locs[0].pretty()
             } else {
                 String::from("NO SRC LOCS")
