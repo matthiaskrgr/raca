@@ -171,9 +171,11 @@ impl CheckResult {
                     self.src_locs[0].pretty(),
                     self.src_locs[1].pretty()
                 )
-            } else {
-                // 1
+            } else if  self.src_locs.len() == 1 {
+                
                 self.src_locs[0].pretty()
+            } else {
+                String::from("NO SRC LOCS")
             }
         };
         format!("{}-{} {} {}", self.krate, self.version, self.id, locstr)
