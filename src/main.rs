@@ -220,6 +220,11 @@ fn download_crate(krate: &Crat) -> PathBuf {
 }
 
 fn extract_crate(src_path: PathBuf, target_path: PathBuf) {
+    // don't extract unnaccessarily
+    if target_path.exists() {
+        return;
+    }
+
     println!(
         "Extracting {} into {}",
         src_path.display(),
