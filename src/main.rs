@@ -22,28 +22,28 @@ fn run_clippy(path: PathBuf) -> Vec<CheckResult> {
         .output()
         .unwrap();
 
-    let _stderr = String::from_utf8_lossy(&clippy.stderr).to_string();
+    let stderr = String::from_utf8_lossy(&clippy.stderr).to_string();
     let stdout = String::from_utf8_lossy(&clippy.stdout).to_string(); // json
 
-    let mut results = Vec::new();
-
-    /*
+    // quickly check if there are any errors and print them to stdout
     stdout.lines().for_each(|line| {
         if line.starts_with("error: internal compiler error:")
             || line.starts_with("query stack during panic:")
         {
-            results.push(format!("ERROR:   {}", line));
+            println!("ERROR:   {}", line);
         }
     });
+
     stderr.lines().for_each(|line| {
         if line.starts_with("error: internal compiler error:")
             || line.starts_with("query stack during panic:")
         {
-            results.push(format!("ERROR:   {}", line));
+            println!("ERROR:   {}", line);
         }
     });
-    */
 
+
+    let mut results = Vec::new();
     stdout
         .lines()
         .map(|raw_line| serde_json::from_str(raw_line).unwrap())
