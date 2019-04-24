@@ -2,6 +2,11 @@ use std::io::Write;
 use std::path::PathBuf;
 
 fn run_clippy(path: PathBuf) -> Vec<CheckResult> {
+    // clean the target dir to make sure we re-check everything
+    std::process::Command::new("cargo")
+        .arg("clean")
+        .current_dir(&path).output().unwrap();
+
     println!("Checking {} ...", &path.display());
     let clippy = std::process::Command::new("cargo")
         .arg("clippy")
@@ -41,7 +46,6 @@ fn run_clippy(path: PathBuf) -> Vec<CheckResult> {
             println!("ERROR:   {}", line);
         }
     });
-
 
     let mut results = Vec::new();
     stdout
