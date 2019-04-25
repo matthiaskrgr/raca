@@ -378,7 +378,23 @@ fn main() {
     let oid = index.write_tree().unwrap();
     let sign = git2::Signature::now("RACA Logger", "raca@example.com").unwrap();
     let tree = repo.find_tree(oid).unwrap();
-    let message = "automatic log update";
+
+    let rustc_stdout = std::process::Command::new("rustc")
+        .arg("Vv")
+        .output()
+        .unwrap();
+    let rustc_version = String::from_utf8_lossy(&rustc_stdout.stdout).to_string();
+
+    let clippy_stdout = std::process::Command::new("cargo")
+        .arg("clippy")
+        .arg("-V")
+        .output()
+        .unwrap();
+    let clippy_version = String::from_utf8_lossy(&clippy_stdout.stdout).to_string();
+
+    let mut message = String::from("automatic update\n");
+    message.push_str(&clippy_version);
+    message.push_str(&rustc_version);
 
     /* fn get_HEAD<'a>(repo: &'a git2::Repository) -> &[&'a git2::Commit] {
         let cmt =  repo.head().unwrap().resolve().unwrap().peel(git2::ObjectType::Commit).unwrap().into_commit().unwrap();
@@ -416,7 +432,7 @@ fn main() {
         Some("HEAD"),
         &sign,
         &sign,
-        message,
+        &message,
         &tree,
         &commit_slice[..],
     )
