@@ -306,17 +306,14 @@ fn main() {
         extract_crate(dest_file, archives_dir.clone());
     }
 
-    /*
+    // start checking crates via clippy nad process the logs
+    for (i, k) in std::fs::read_dir(archives_dir.clone()).unwrap().enumerate() {
+        //println!("i {}, k {:?}", i, k);
+        let results = run_clippy(k.unwrap().path());
 
-        // start checking crates via clippy nad process the logs
-        for (i, k) in std::fs::read_dir(archives_dir.clone()).unwrap().enumerate() {
-            //println!("i {}, k {:?}", i, k);
-            let results = run_clippy(k.unwrap().path());
-
-            let kratename = format!("{}-{}", &krates[i].name, &krates[i].version);
-            process_logs(results, kratename);
-        }
-    */
+        let kratename = format!("{}-{}", &krates[i].name, &krates[i].version);
+        process_logs(results, kratename);
+    }
 
     // get the logs dir
     let raca_dir = get_raca_dir();
