@@ -1,6 +1,7 @@
 use std::io::Write;
 use std::path::PathBuf;
 
+
 fn run_clippy(path: PathBuf) -> Vec<CheckResult> {
     // clean the target dir to make sure we re-check everything
     std::process::Command::new("cargo")
@@ -313,9 +314,22 @@ fn main() {
         process_logs(results, kratename);
     }
 
+    // get the logs dir
     let raca_dir = get_raca_dir();
     let raca_logs = raca_dir.join("logs/");
     if !raca_logs.is_dir() {
         std::fs::create_dir(&raca_logs).unwrap();
     }
+
+    // check if the log dir is already a repository
+
+    match git2::Repository::open(&raca_logs) {
+        Ok(repo) => {} // already a repository
+        // init
+        Err(_) => {
+            git2::Repository::init(&raca_logs)
+                .expect(&format!("Failed to init git repo at {:?}", raca_logs));
+        }
+    }
+    let repo = git2::Repository::open(&raca_logs).unwrap();
 }

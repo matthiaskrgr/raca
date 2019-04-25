@@ -20,3 +20,6 @@ tar = "0.4"
 
 #get home dir
 dirs = "1.0.5"
+
+#git operations
+git2 = "0.8"
