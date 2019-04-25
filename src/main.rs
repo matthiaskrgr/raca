@@ -345,4 +345,58 @@ fn main() {
             new.display()
         ));
     }
+    // commit everything
+    // http://siciarz.net/24-days-rust-git2/
+
+    let mut index = repo.index().unwrap();
+    // add all files
+    walkdir::WalkDir::new(repo.path())
+        .into_iter()
+        .skip(1)
+        .for_each(|x| {
+            index
+                .add_path(x.unwrap().path())
+                .expect("failed to add to index")
+        });
+    let oid = index.write_tree().unwrap();
+    let sign = git2::Signature::now("RACA Logger", "raca@example.com").unwrap();
+    let tree = repo.find_tree(oid).unwrap();
+    let message = "update repo";
+
+    /* fn get_HEAD<'a>(repo: &'a git2::Repository) -> &[&'a git2::Commit] {
+        let cmt =  repo.head().unwrap().resolve().unwrap().peel(git2::ObjectType::Commit).unwrap().into_commit().unwrap();
+
+    let v =    vec!(&cmt);
+    &v[..]
+    } */
+
+    let commit = repo
+        .head()
+        .unwrap()
+        .resolve()
+        .unwrap()
+        .peel(git2::ObjectType::Commit)
+        .unwrap()
+        .into_commit();
+
+    let mut c;
+    if commit.is_ok() {
+        let cu = commit.unwrap();
+        c = vec![cu];
+    } else {
+        c = vec![];
+    }
+
+    let commit_slice: Vec<_> = c.iter().map(|x| x).collect();
+
+    repo.commit(
+        Some("HEAD"),
+        &sign,
+        &sign,
+        message,
+        &tree,
+        &commit_slice[..],
+    ).unwrap();
+    
+    println!("UPDATES COMMITTED");
 }

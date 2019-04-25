@@ -23,3 +23,6 @@ dirs = "1.0.5"
 
 #git operations
 git2 = "0.8"
+
+# walkdir
+walkdir = "2.2"
