@@ -17,3 +17,6 @@ reqwest = "0.9"
 # extraction of .crates
 flate2 = "1.0"
 tar = "0.4" 
+
+#get home dir
+dirs = "1.0.5"

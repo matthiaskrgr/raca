@@ -5,7 +5,9 @@ fn run_clippy(path: PathBuf) -> Vec<CheckResult> {
     // clean the target dir to make sure we re-check everything
     std::process::Command::new("cargo")
         .arg("clean")
-        .current_dir(&path).output().unwrap();
+        .current_dir(&path)
+        .output()
+        .unwrap();
 
     println!("Checking {} ...", &path.display());
     let clippy = std::process::Command::new("cargo")
@@ -254,6 +256,15 @@ fn process_logs(check_results: Vec<CheckResult>, kratename: String) {
     });
 }
 
+fn get_raca_dir() -> PathBuf {
+    let home_dir = dirs::home_dir().expect("Failed to get home dir!");
+    let raca_dir = home_dir.join(".raca/");
+    if !raca_dir.is_dir() {
+        std::fs::create_dir(&raca_dir).unwrap();
+    }
+    raca_dir
+}
+
 fn main() {
     let krates = vec![
         Crat::new("cargo", "0.35.0"),
@@ -300,5 +311,11 @@ fn main() {
 
         let kratename = format!("{}-{}", &krates[i].name, &krates[i].version);
         process_logs(results, kratename);
+    }
+
+    let raca_dir = get_raca_dir();
+    let raca_logs = raca_dir.join("logs/");
+    if !raca_logs.is_dir() {
+        std::fs::create_dir(&raca_logs).unwrap();
     }
 }
