@@ -381,7 +381,7 @@ fn main() {
     let oid = index.write_tree().unwrap();
     let sign = git2::Signature::now("RACA Logger", "raca@example.com").unwrap();
     let tree = repo.find_tree(oid).unwrap();
-    let message = "update repo";
+    let message = "automatic log update";
 
     /* fn get_HEAD<'a>(repo: &'a git2::Repository) -> &[&'a git2::Commit] {
         let cmt =  repo.head().unwrap().resolve().unwrap().peel(git2::ObjectType::Commit).unwrap().into_commit().unwrap();
