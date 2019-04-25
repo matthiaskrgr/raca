@@ -1,7 +1,7 @@
+use std::ffi::OsStr;
 use std::io::Write;
 use std::path::PathBuf;
 use std::path::{self, Path};
-use std::ffi::OsStr;
 
 fn run_clippy(path: PathBuf) -> Vec<CheckResult> {
     // clean the target dir to make sure we re-check everything
@@ -358,8 +358,10 @@ fn main() {
     fn is_git(entry: &walkdir::DirEntry) -> bool {
         entry
             .path()
-            .components().into_iter().find(|&path_elm|  path_elm == std::path::Component::Normal(OsStr::new(".git"))).is_some()
-
+            .components()
+            .into_iter()
+            .find(|&path_elm| path_elm == std::path::Component::Normal(OsStr::new(".git")))
+            .is_some()
     }
 
     walkdir::WalkDir::new(repo.path())
@@ -404,7 +406,6 @@ fn main() {
         }
     } else {
         c = vec![];
-
     }
 
     let commit_slice: Vec<_> = c.iter().map(|x| x).collect();
