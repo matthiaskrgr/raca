@@ -364,14 +364,19 @@ fn main() {
             .is_some()
     }
 
-    walkdir::WalkDir::new(repo.path())
+    let mut logs_path: PathBuf = repo.path().into(); // repo path is .git
+    logs_path.pop();
+
+    walkdir::WalkDir::new(&logs_path)
         .into_iter()
         .filter_entry(|e| !is_git(e))
         .skip(1)
         .for_each(|x| {
             let p = x.unwrap();
-            println!("{}", p.path().display());
-            index.add_path(p.path()).expect("failed to add to index")
+            // println!("here:  {}", p.path().display());
+            // these need to be relative paths
+            let rel_path = pathdiff::diff_paths(&p.path(), &logs_path).unwrap();
+            index.add_path(&rel_path).expect("failed to add to index")
         });
     let oid = index.write_tree().unwrap();
     let sign = git2::Signature::now("RACA Logger", "raca@example.com").unwrap();

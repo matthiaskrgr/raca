@@ -26,3 +26,6 @@ git2 = "0.8"
 
 # walkdir
 walkdir = "2.2"
+
+# make absolute paths relative
+pathdiff = "0.1"
