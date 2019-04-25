@@ -305,6 +305,7 @@ fn main() {
         extract_crate(dest_file, archives_dir.clone());
     }
 
+
     // start checking crates via clippy nad process the logs
     for (i, k) in std::fs::read_dir(archives_dir.clone()).unwrap().enumerate() {
         //println!("i {}, k {:?}", i, k);
@@ -332,4 +333,16 @@ fn main() {
         }
     }
     let repo = git2::Repository::open(&raca_logs).unwrap();
+    // copy the logs into raca_logs
+    // @TODO store here directly
+    for file in std::fs::read_dir(&log_dir).unwrap() {
+        let file = file.unwrap().path();
+        let old = file;
+        let new = raca_logs.join(&old.file_name().unwrap());
+        std::fs::copy(&old, &new).expect(&format!(
+            "failed to copy {} to {}",
+            old.display(),
+            new.display()
+        ));
+    }
 }
