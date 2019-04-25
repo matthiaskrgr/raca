@@ -1,7 +1,6 @@
 use std::ffi::OsStr;
 use std::io::Write;
 use std::path::PathBuf;
-use std::path::{self, Path};
 
 fn run_clippy(path: PathBuf) -> Vec<CheckResult> {
     // clean the target dir to make sure we re-check everything
@@ -325,11 +324,11 @@ fn main() {
     // check if the log dir is already a repository
 
     match git2::Repository::open(&raca_logs) {
-        Ok(repo) => {} // already a repository
+        Ok(_repo) => {} // already a repository
         // init
         Err(_) => {
             git2::Repository::init(&raca_logs)
-                .expect(&format!("Failed to init git repo at {:?}", raca_logs));
+                .unwrap_or_else(|_| panic!("Failed to init git repo at {:?}", raca_logs));
         }
     }
     let repo = git2::Repository::open(&raca_logs).unwrap();
@@ -339,11 +338,8 @@ fn main() {
         let file = file.unwrap().path();
         let old = file;
         let new = raca_logs.join(&old.file_name().unwrap());
-        std::fs::copy(&old, &new).expect(&format!(
-            "failed to copy {} to {}",
-            old.display(),
-            new.display()
-        ));
+        std::fs::copy(&old, &new)
+            .unwrap_or_else(|_| panic!("failed to copy {} to {}", old.display(), new.display()));
     }
     // commit everything
     // http://siciarz.net/24-days-rust-git2/
@@ -356,9 +352,7 @@ fn main() {
         entry
             .path()
             .components()
-            .into_iter()
-            .find(|&path_elm| path_elm == std::path::Component::Normal(OsStr::new(".git")))
-            .is_some()
+            .any(|path_elm| path_elm == std::path::Component::Normal(OsStr::new(".git")))
     }
 
     let mut logs_path: PathBuf = repo.path().into(); // repo path is .git
@@ -406,7 +400,7 @@ fn main() {
     let mut c;
 
     let head = repo.head();
-    if repo.head().is_ok() {
+    if head.is_ok() {
         let commit = repo
             .head()
             .unwrap()
