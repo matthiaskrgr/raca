@@ -1,6 +1,7 @@
 use std::io::Write;
 use std::path::PathBuf;
-
+use std::path::{self, Path};
+use std::ffi::OsStr;
 
 fn run_clippy(path: PathBuf) -> Vec<CheckResult> {
     // clean the target dir to make sure we re-check everything
@@ -305,15 +306,17 @@ fn main() {
         extract_crate(dest_file, archives_dir.clone());
     }
 
+    /*
 
-    // start checking crates via clippy nad process the logs
-    for (i, k) in std::fs::read_dir(archives_dir.clone()).unwrap().enumerate() {
-        //println!("i {}, k {:?}", i, k);
-        let results = run_clippy(k.unwrap().path());
+        // start checking crates via clippy nad process the logs
+        for (i, k) in std::fs::read_dir(archives_dir.clone()).unwrap().enumerate() {
+            //println!("i {}, k {:?}", i, k);
+            let results = run_clippy(k.unwrap().path());
 
-        let kratename = format!("{}-{}", &krates[i].name, &krates[i].version);
-        process_logs(results, kratename);
-    }
+            let kratename = format!("{}-{}", &krates[i].name, &krates[i].version);
+            process_logs(results, kratename);
+        }
+    */
 
     // get the logs dir
     let raca_dir = get_raca_dir();
@@ -350,13 +353,23 @@ fn main() {
 
     let mut index = repo.index().unwrap();
     // add all files
+
+    // https://docs.rs/walkdir/2.2.7/walkdir/#example-skip-hidden-files-and-directories-on-unix
+    fn is_git(entry: &walkdir::DirEntry) -> bool {
+        entry
+            .path()
+            .components().into_iter().find(|&path_elm|  path_elm == std::path::Component::Normal(OsStr::new(".git"))).is_some()
+
+    }
+
     walkdir::WalkDir::new(repo.path())
         .into_iter()
+        .filter_entry(|e| !is_git(e))
         .skip(1)
         .for_each(|x| {
-            index
-                .add_path(x.unwrap().path())
-                .expect("failed to add to index")
+            let p = x.unwrap();
+            println!("{}", p.path().display());
+            index.add_path(p.path()).expect("failed to add to index")
         });
     let oid = index.write_tree().unwrap();
     let sign = git2::Signature::now("RACA Logger", "raca@example.com").unwrap();
@@ -370,21 +383,28 @@ fn main() {
     &v[..]
     } */
 
-    let commit = repo
-        .head()
-        .unwrap()
-        .resolve()
-        .unwrap()
-        .peel(git2::ObjectType::Commit)
-        .unwrap()
-        .into_commit();
-
     let mut c;
-    if commit.is_ok() {
-        let cu = commit.unwrap();
-        c = vec![cu];
+
+    let head = repo.head();
+    if repo.head().is_ok() {
+        let commit = repo
+            .head()
+            .unwrap()
+            .resolve()
+            .unwrap()
+            .peel(git2::ObjectType::Commit)
+            .unwrap()
+            .into_commit();
+
+        if commit.is_ok() {
+            let cu = commit.unwrap();
+            c = vec![cu];
+        } else {
+            c = vec![];
+        }
     } else {
         c = vec![];
+
     }
 
     let commit_slice: Vec<_> = c.iter().map(|x| x).collect();
@@ -396,7 +416,8 @@ fn main() {
         message,
         &tree,
         &commit_slice[..],
-    ).unwrap();
-    
+    )
+    .unwrap();
+
     println!("UPDATES COMMITTED");
 }
